@@ -1,0 +1,62 @@
+name: Node.js CI
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [15.x]
+    
+    env:
+
+      DB_PASSWORD: 'password'
+      DB_NAME: 'BOOK_LIBRARY_DEV'
+      DB_USER: 'root'
+      DB_HOST: 'localhost'
+      DB_PORT: 3307
+      Port: 3000
+      DIALECT: mysql
+
+# Your environment variables might be wrong. Please double check .env file
+# Environment Variables are: {
+#   DB_PASSWORD: 'password',
+#   DB_NAME: 'BOOK_LIBRARY_DEV',
+#   DB_USER: 'root',
+#   DB_HOST: 'localhost',
+#   DB_PORT: '3307'
+
+    steps:
+
+      - uses: mirromutth/mysql-action@v1.1
+        with:
+          host port: 3800 # Optional, default value is 3306. The port of host
+          container port: 3307 # Optional, default value is 3306. The port of container
+          character set server: 'utf8' # Optional, default value is 'utf8mb4'. The '--character-set-server' option for mysqld
+          collation server: 'utf8_general_ci' # Optional, default value is 'utf8mb4_general_ci'. The '--collation-server' option for mysqld
+          mysql database: 'BOOK_LIBRARY_DEV' # Optional, default value is "test". The specified database which will be create
+          mysql user: 'root' # Required if "mysql root password" is empty, default is empty. The superuser for the specified database. Can use secrets, too
+          mysql password: 'password' # Required if "mysql user" exists. The password for the "mysql user"
+      - run: sleep 30
+      - uses: actions/checkout@v3
+      - run: sleep 30
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+      - run: sleep 30
+      - run: npm ci
+      - run: sleep 30
+      - run: npm run build --if-present
+      - run: sleep 30
+      - run: npm install sequelize@${{ matrix.sequelize-version }} 
+      - run: sleep 30
+      - run: npm test
+
+    
